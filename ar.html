@@ -143,13 +143,15 @@
         const triggerBtn = document.querySelector('#trigger-ar');
         const loader = document.querySelector('#loader');
 
-        // Setup the specific dish
+        // Set the correct model and scale immediately
         if (modelType === 'pizza') {
             dishName.textContent = "Gourmet Pizza";
             engine.setAttribute('src', 'pizza.glb');
+            engine.setAttribute('scale', '0.8 0.8 0.8');
         } else {
             dishName.textContent = "Luxury Burger";
             engine.setAttribute('src', 'burger.glb');
+            engine.setAttribute('scale', '0.1 0.1 0.1'); // Reduced from 0.4 to 0.1 for realism
         }
 
         // Hide loader when the AR system is ready
