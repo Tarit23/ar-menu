@@ -2,12 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AR Vision | Gourmet AR</title>
     <!-- A-Frame and AR.js libraries -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
+        /* Force AR.js video and canvas to behave on mobile */
+        video, canvas {
+            object-fit: cover !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
+
         .ar-ui {
             position: fixed;
             bottom: 2rem;
@@ -41,44 +51,46 @@
         }
 
         .status-msg {
-            background: rgba(255, 166, 0, 0.9);
-            color: black;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #4ade80;
+            padding: 0.5rem 1.5rem;
+            border-radius: 100px;
             font-size: 0.9rem;
             text-align: center;
+            font-family: sans-serif;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body style="margin: 0; overflow: hidden; touch-action: none;">
     <!-- AR UI Overlay -->
     <div class="ar-ui">
-        <div id="status" class="status-msg">Searching for Hiro Marker...</div>
+        <div id="status" class="status-msg">Initializing Camera...</div>
         <a href="index.html" class="ar-btn">Back to Menu</a>
     </div>
 
     <!-- AR Scene -->
     <a-scene 
         embedded 
-        arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best;"
         renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true; precision: medium;"
         vr-mode-ui="enabled: false">
         
         <a-assets>
-            <!-- Preload models to ensure they are ready -->
             <a-asset-item id="burger-model" src="burger.glb"></a-asset-item>
             <a-asset-item id="pizza-model" src="pizza.glb"></a-asset-item>
         </a-assets>
 
         <!-- Hiro Marker -->
-        <a-marker preset="hiro" id="marker" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-            <!-- Debug Box: Helps confirm the marker is detected even if the model fails to load -->
-            <a-box position="0 0.5 0" material="opacity: 0.5; color: #4ade80;" scale="0.2 0.2 0.2" 
+        <a-marker preset="hiro" id="marker" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+            <!-- Debug Box: Confirms detection -->
+            <a-box position="0 0.5 0" material="opacity: 0.4; color: #4ade80;" scale="0.25 0.25 0.25" 
                    animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
 
             <a-entity 
                 id="model-entity"
-                position="0 0.1 0" 
+                position="0 0.2 0" 
                 scale="1 1 1"
                 rotation="0 0 0"
                 animation="property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear"
@@ -86,7 +98,8 @@
             </a-entity>
         </a-marker>
 
-        <a-entity camera></a-entity>
+        <!-- Use a camera with a wider FOV -->
+        <a-entity camera fov="80"></a-entity>
     </a-scene>
 
     <script>
@@ -96,32 +109,32 @@
         const modelEntity = document.querySelector('#model-entity');
         const statusMsg = document.querySelector('#status');
 
-        // Set the model source based on parameter
-        if (modelType === 'pizza') {
-            modelEntity.setAttribute('gltf-model', '#pizza-model');
-            modelEntity.setAttribute('scale', '0.8 0.8 0.8'); // Pizza scale
-        } else {
-            modelEntity.setAttribute('gltf-model', '#burger-model');
-            modelEntity.setAttribute('scale', '0.015 0.015 0.015'); // Recalibrated burger scale
-        }
-
-        // Add error logging for models
-        modelEntity.addEventListener('model-error', (e) => {
-            console.error('Model failed to load:', e);
-            statusMsg.textContent = 'Error loading 3D model.';
-            statusMsg.style.background = '#ef4444';
+        // Wait for page load to ensure everything is initialized
+        window.addEventListener('load', () => {
+            statusMsg.textContent = 'Searching for Hiro Marker...';
+            
+            // Set the model source
+            if (modelType === 'pizza') {
+                modelEntity.setAttribute('gltf-model', '#pizza-model');
+                modelEntity.setAttribute('scale', '0.7 0.7 0.7');
+            } else {
+                modelEntity.setAttribute('gltf-model', '#burger-model');
+                modelEntity.setAttribute('scale', '0.012 0.012 0.012');
+            }
         });
 
         // Marker detection feedback
         const marker = document.querySelector('#marker');
         marker.addEventListener('markerFound', () => {
-            statusMsg.textContent = `Dish Detected (${modelType.toUpperCase()})!`;
-            statusMsg.style.background = '#4ade80';
+            statusMsg.textContent = `${modelType.toUpperCase()} REVEALED!`;
+            statusMsg.style.borderColor = '#4ade80';
+            statusMsg.style.color = '#4ade80';
         });
 
         marker.addEventListener('markerLost', () => {
-            statusMsg.textContent = 'Searching for Hiro Marker...';
-            statusMsg.style.background = 'rgba(255, 166, 0, 0.9)';
+            statusMsg.textContent = 'Scanning for Hiro Marker...';
+            statusMsg.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            statusMsg.style.color = '#ffffff';
         });
     </script>
 </body>
