@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gourmet AR | Future of Dining</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <header>
+        <h1>Gourmet AR</h1>
+        <p>Experience our signature dishes in augmented reality before you order. The intersection of taste and technology.</p>
+    </header>
+
+    <main class="menu-container">
+        <!-- Burger Section -->
+        <section class="menu-item">
+            <div class="item-content">
+                <h2>Mexican Tulum Burger</h2>
+                <p>A juicy beef patty topped with fresh avocado, jalapenos, and our secret Tulum spicy sauce. Served with crispy fries.</p>
+                <span class="price">$18.00</span>
+                <a href="ar.html?model=burger" class="btn-ar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    View in AR Vision
+                </a>
+            </div>
+            <div class="item-visual">
+                <iframe title="Mexican Tulum Burger" src="https://sketchfab.com/models/a66e5e28f12742b7a407a17d70c4037c/embed?autostart=1&ui_controls=0&ui_infos=0&ui_watermark=0"></iframe>
+            </div>
+        </section>
+
+        <!-- Pizza Section -->
+        <section class="menu-item">
+            <div class="item-content">
+                <h2>Pizza Salami</h2>
+                <p>Authentic wood-fired pizza with premium Italian salami, buffalo mozzarella, and fresh basil leaves on a sourdough crust.</p>
+                <span class="price">$22.00</span>
+                <a href="ar.html?model=pizza" class="btn-ar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    View in AR Vision
+                </a>
+            </div>
+            <div class="item-visual">
+                <iframe title="Pizza Salami" src="https://sketchfab.com/models/639c6c062df64fa48822f82544926ebe/embed?autostart=1&ui_controls=0&ui_infos=0&ui_watermark=0"></iframe>
+            </div>
+        </section>
+
+        <!-- Markers Section -->
+        <section class="markers-info">
+            <h3>How to View in AR</h3>
+            <p>1. Tap the "View in AR Vision" button above.</p>
+            <p>2. Point your camera at the <strong>Hiro Marker</strong>.</p>
+            <p>3. Watch the dish appear on your table!</p>
+            <br>
+            <p><a href="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" target="_blank">Download Hiro Marker Image</a></p>
+        </section>
+    </main>
+
+    <footer style="padding: 4rem; text-align: center; color: var(--text-secondary);">
+        <p>&copy; 2026 Gourmet AR Experience. Powered by AR.js & Sketchfab.</p>
+    </footer>
+
+    <script>
+        // Simple intersection observer for animations
+        const items = document.querySelectorAll('.menu-item');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        items.forEach(item => observer.observe(item));
+    </script>
+</body>
+</html>

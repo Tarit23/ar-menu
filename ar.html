@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Vision | Gourmet AR</title>
+    <!-- A-Frame and AR.js libraries -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        .ar-ui {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            pointer-events: none;
+        }
+
+        .ar-btn {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem 2rem;
+            border-radius: 100px;
+            text-decoration: none;
+            font-family: sans-serif;
+            font-weight: bold;
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .ar-btn:hover {
+            background: white;
+            color: black;
+        }
+
+        .status-msg {
+            background: rgba(255, 166, 0, 0.9);
+            color: black;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <!-- AR UI Overlay -->
+    <div class="ar-ui">
+        <div id="status" class="status-msg">Searching for Hiro Marker...</div>
+        <a href="index.html" class="ar-btn">Back to Menu</a>
+    </div>
+
+    <!-- AR Scene -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true;"
+        vr-mode-ui="enabled: false">
+        
+        <a-assets id="assets-container">
+            <!-- Models will be added here dynamically -->
+        </a-assets>
+
+        <!-- Hiro Marker -->
+        <a-marker preset="hiro" id="marker">
+            <a-entity 
+                id="model-entity"
+                position="0 0 0" 
+                scale="0.5 0.5 0.5"
+                rotation="0 0 0"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
+            >
+            </a-entity>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelType = urlParams.get('model') || 'burger';
+        const modelEntity = document.querySelector('#model-entity');
+        const statusMsg = document.querySelector('#status');
+
+        // Set the model source
+        // Assumes burger.glb and pizza.glb are in the root directory
+        const modelPath = modelType === 'pizza' ? 'pizza.glb' : 'burger.glb';
+        
+        // Apply the GLTF model
+        modelEntity.setAttribute('gltf-model', modelPath);
+
+        // Scale adjustment based on model
+        if (modelType === 'pizza') {
+            modelEntity.setAttribute('scale', '1 1 1');
+        } else {
+            modelEntity.setAttribute('scale', '0.05 0.05 0.05'); // Burger models are often large
+        }
+
+        // Marker detection feedback
+        const marker = document.querySelector('#marker');
+        marker.addEventListener('markerFound', () => {
+            statusMsg.textContent = `Displaying ${modelType.toUpperCase()}!`;
+            statusMsg.style.background = '#4ade80';
+        });
+
+        marker.addEventListener('markerLost', () => {
+            statusMsg.textContent = 'Marker Lost. Point at Hiro Marker.';
+            statusMsg.style.background = '#facc15';
+        });
+    </script>
+</body>
+</html>
