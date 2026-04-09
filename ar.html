@@ -4,20 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AR Vision | Gourmet AR</title>
-    <!-- A-Frame and AR.js libraries -->
+    <!-- A-Frame 1.4.2 for better WebXR support -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        /* Force AR.js video and canvas to behave on mobile */
-        video, canvas {
-            object-fit: cover !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-        }
-
         .ar-ui {
             position: fixed;
             bottom: 2rem;
@@ -29,10 +18,11 @@
             align-items: center;
             gap: 1rem;
             pointer-events: none;
+            width: 100%;
         }
 
         .ar-btn {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 1rem 2rem;
@@ -45,36 +35,31 @@
             transition: all 0.3s ease;
         }
 
-        .ar-btn:hover {
-            background: white;
-            color: black;
-        }
-
         .status-msg {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             color: #4ade80;
-            padding: 0.5rem 1.5rem;
+            padding: 0.8rem 1.5rem;
             border-radius: 100px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             text-align: center;
             font-family: sans-serif;
-            border: 1px solid rgba(74, 222, 128, 0.3);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden; touch-action: none;">
     <!-- AR UI Overlay -->
     <div class="ar-ui">
-        <div id="status" class="status-msg">Initializing Camera...</div>
-        <a href="index.html" class="ar-btn">Back to Menu</a>
+        <div id="status" class="status-msg">Scanning surface... Move your phone slowly.</div>
+        <a href="index.html" class="ar-btn">Exit Experience</a>
     </div>
 
-    <!-- AR Scene -->
     <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1280; canvasHeight: 720;"
-        renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true; precision: medium;"
+        webxr="requiredFeatures: hit-test, local-floor; optionalFeatures: dom-overlay; overlayElement: .ar-ui;"
+        renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
+        ar-hit-test="target: #model-container; type: floor;"
         vr-mode-ui="enabled: false">
         
         <a-assets>
@@ -82,63 +67,72 @@
             <a-asset-item id="pizza-model" src="pizza.glb"></a-asset-item>
         </a-assets>
 
-        <!-- Hiro Marker with enhanced tracking configuration -->
-        <a-marker preset="hiro" id="marker" 
-                  smooth="true" 
-                  smoothCount="3" 
-                  smoothTolerance="0.01" 
-                  smoothThreshold="2">
-            <!-- Debug Box: Confirms detection -->
-            <a-box position="0 0.5 0" material="opacity: 0.4; color: #4ade80;" scale="0.25 0.25 0.25" 
-                   animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
+        <!-- The container that will be moved based on surface detection -->
+        <a-entity id="model-container" position="0 0 -2" visible="false">
+            <!-- The Reticle (Target Ring) -->
+            <a-ring rotation="-90 0 0" radius-inner="0.1" radius-outer="0.15" color="#4ade80" material="shader: flat; opacity: 0.8"></a-ring>
+            
+            <!-- Information text floating above the ring -->
+            <a-entity text="value: Tap to place; align: center; width: 2" position="0 0.2 0" rotation="-20 0 0"></a-entity>
+        </a-entity>
 
-            <a-entity 
-                id="model-entity"
-                position="0 0.2 0" 
-                scale="1 1 1"
-                rotation="0 0 0"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear"
-            >
+        <!-- The Placed Model (appears after tapping) -->
+        <a-entity id="placed-model" visible="false">
+            <a-entity id="model-entity" 
+                      rotation="0 0 0"
+                      animation="property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear">
             </a-entity>
-        </a-marker>
+        </a-entity>
 
-        <!-- Use a camera with a wider FOV -->
-        <a-entity camera fov="80"></a-entity>
+        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        // Parse URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const modelType = urlParams.get('model') || 'burger';
-        const modelEntity = document.querySelector('#model-entity');
+        const sceneEl = document.querySelector('a-scene');
         const statusMsg = document.querySelector('#status');
+        const modelContainer = document.querySelector('#model-container');
+        const placedModel = document.querySelector('#placed-model');
+        const modelEntity = document.querySelector('#model-entity');
 
-        // Wait for page load to ensure everything is initialized
-        window.addEventListener('load', () => {
-            statusMsg.textContent = 'Searching for Hiro Marker...';
+        // Set the correct model and scale immediately
+        if (modelType === 'pizza') {
+            modelEntity.setAttribute('gltf-model', '#pizza-model');
+            modelEntity.setAttribute('scale', '0.8 0.8 0.8');
+        } else {
+            modelEntity.setAttribute('gltf-model', '#burger-model');
+            modelEntity.setAttribute('scale', '0.4 0.4 0.4'); // Significantly increased scale
+        }
+
+        // Handle Surface Tracking (Hit Test)
+        sceneEl.addEventListener('ar-hit-test-select', (ev) => {
+            // Get the position from the hit-test result
+            const pos = ev.detail.position;
             
-            // Set the model source
-            if (modelType === 'pizza') {
-                modelEntity.setAttribute('gltf-model', '#pizza-model');
-                modelEntity.setAttribute('scale', '0.7 0.7 0.7');
-            } else {
-                modelEntity.setAttribute('gltf-model', '#burger-model');
-                modelEntity.setAttribute('scale', '0.012 0.012 0.012');
+            // Place the model at the scanned spot
+            placedModel.setAttribute('position', pos);
+            placedModel.setAttribute('visible', true);
+            
+            // Hide the scanning reticle
+            modelContainer.setAttribute('visible', false);
+            statusMsg.textContent = `${modelType.toUpperCase()} PLACED!`;
+            
+            setTimeout(() => {
+                statusMsg.textContent = 'Enjoy your meal in AR!';
+            }, 3000);
+        });
+
+        // Update status message based on system state
+        sceneEl.addEventListener('enter-vr', () => {
+            if (sceneEl.is('ar-mode')) {
+                statusMsg.textContent = 'Scan your table or floor...';
             }
         });
 
-        // Marker detection feedback
-        const marker = document.querySelector('#marker');
-        marker.addEventListener('markerFound', () => {
-            statusMsg.textContent = `${modelType.toUpperCase()} REVEALED!`;
-            statusMsg.style.borderColor = '#4ade80';
-            statusMsg.style.color = '#4ade80';
-        });
-
-        marker.addEventListener('markerLost', () => {
-            statusMsg.textContent = 'Scanning for Hiro Marker...';
-            statusMsg.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-            statusMsg.style.color = '#ffffff';
+        // Fallback for markerless support if needed
+        modelContainer.addEventListener('model-loaded', () => {
+             console.log('Food model loaded and ready.');
         });
     </script>
 </body>
