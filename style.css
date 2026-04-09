@@ -159,6 +159,9 @@ header p {
     font-size: 1.1rem;
     transition: var(--transition);
     box-shadow: 0 10px 20px rgba(255, 62, 62, 0.2);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .btn-ar:hover {
