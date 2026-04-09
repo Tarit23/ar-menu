@@ -2,157 +2,179 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D View | Gourmet AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Launch AR | Gourmet AR</title>
     <!-- Google Model Viewer -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
     <style>
         :root {
             --accent: #4ade80;
+            --bg: #05070a;
         }
 
-        body {
+        body, html {
             margin: 0;
-            background-color: #05070a;
-            font-family: sans-serif;
-            overflow: hidden;
+            padding: 0;
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Outfit', sans-serif;
             height: 100vh;
             width: 100vw;
+            overflow: hidden;
         }
 
-        model-viewer {
-            width: 100%;
-            height: 100%;
-            background-color: #05070a;
-            --poster-color: transparent;
-        }
-
-        .ar-overlay {
+        /* The Launch Pad UI */
+        .launcher-ui {
             position: fixed;
-            top: 2rem;
-            left: 2rem;
-            right: 2rem;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            pointer-events: none;
-            z-index: 10;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #111827 0%, var(--bg) 100%);
+            z-index: 100;
+            text-align: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .dish-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .instruction {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            max-width: 300px;
+        }
+
+        .btn-launch-ar {
+            width: 80vw;
+            max-width: 350px;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #ff8c00, #ff3e3e);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 20px 40px rgba(255, 62, 62, 0.3);
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         .btn-back {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            margin-top: 2rem;
+            color: #4b5563;
             text-decoration: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 100px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
             font-weight: 600;
-            pointer-events: auto;
-            transition: all 0.3s ease;
+            font-size: 1rem;
         }
 
-        .btn-back:hover {
-            background: rgba(255, 255, 255, 0.2);
+        /* Hidden Model Viewer - We only use its AR engine */
+        model-viewer {
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            position: absolute;
+            pointer-events: none;
         }
 
-        #ar-button {
-            background-image: url(https://modelviewer.dev/assets/ic_view_in_ar_new_googblue_48dp.png);
-            background-repeat: no-repeat;
-            background-size: 20px 20px;
-            background-position: 12px 50%;
-            background-color: #fff;
-            color: #4285f4;
-            border-radius: 100px;
-            border: none;
-            padding: 0.8rem 1.2rem 0.8rem 40px;
-            font-weight: 600;
-            font-size: 0.9rem;
+        /* Loader Overlay */
+        #loader {
             position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        #ar-button:active {
-            transform: translateX(-50%) scale(0.95);
-        }
-
-        .loader {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            opacity: 0.6;
-            text-align: center;
-        }
-
-        #status {
-            position: fixed;
-            bottom: 5rem;
+            top: 0;
+            left: 0;
             width: 100%;
-            text-align: center;
-            color: var(--accent);
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            font-weight: 600;
-            text-transform: uppercase;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
         }
     </style>
 </head>
 <body>
-    <div class="ar-overlay">
-        <a href="index.html" class="btn-back">← Back to Menu</a>
+    <div id="loader">Loading Vision Engine...</div>
+
+    <div class="launcher-ui">
+        <h1 class="dish-title" id="dish-name">Signature Dish</h1>
+        <p class="instruction">Scan your table and watch your meal appear in life-size AR.</p>
+        
+        <button class="btn-launch-ar" id="trigger-ar">
+            ACTIVATE AR CAMERA
+        </button>
+
+        <a href="index.html" class="btn-back">Cancel & Go Back</a>
     </div>
 
-    <div class="loader" id="loading-text">Preparing ingredients...</div>
-    <div id="status">3D Preview Mode</div>
-
-    <!-- The Model Viewer -->
+    <!-- The Hidden Engine -->
     <model-viewer 
-        id="mv"
+        id="mv-engine"
         src=""
         ar
-        ar-modes="scene-viewer quick-look webxr"
+        ar-modes="scene-viewer webxr quick-look"
         camera-controls
-        auto-rotate
-        shadow-intensity="1.5"
-        shadow-softness="0.5"
-        environment-image="neutral"
-        exposure="1.2"
-        alt="A 3D model of a signature dish"
-    >
-        <button slot="ar-button" id="ar-button">
-            VIEW ON YOUR TABLE
-        </button>
-    </model-viewer>
+    ></model-viewer>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const modelType = urlParams.get('model') || 'burger';
-        const mv = document.querySelector('#mv');
-        const loadingText = document.querySelector('#loading-text');
+        const engine = document.querySelector('#mv-engine');
+        const dishName = document.querySelector('#dish-name');
+        const triggerBtn = document.querySelector('#trigger-ar');
+        const loader = document.querySelector('#loader');
 
-        // Set the correct model source
-        const modelFile = modelType === 'pizza' ? 'pizza.glb' : 'burger.glb';
-        mv.setAttribute('src', modelFile);
+        // Setup the specific dish
+        if (modelType === 'pizza') {
+            dishName.textContent = "Gourmet Pizza";
+            engine.setAttribute('src', 'pizza.glb');
+        } else {
+            dishName.textContent = "Luxury Burger";
+            engine.setAttribute('src', 'burger.glb');
+        }
 
-        // Hide loading text when model is loaded
-        mv.addEventListener('load', () => {
-            loadingText.style.display = 'none';
+        // Hide loader when the AR system is ready
+        engine.addEventListener('load', () => {
+            loader.style.display = 'none';
         });
 
-        // Specific adjustments for burger vs pizza
-        if (modelType === 'pizza') {
-            mv.setAttribute('camera-orbit', '45deg 75deg 105%');
-        } else {
-            mv.setAttribute('camera-orbit', '45deg 75deg 100%');
-        }
+        // THE FORCE-AR LOGIC
+        // This is the only way to bypass the "3D Look"
+        triggerBtn.addEventListener('click', () => {
+            // Attempt to activate the native AR camera immediately
+            // This is the professional trigger for Scene Viewer
+            engine.activateAR();
+            
+            // Log for debugging
+            console.log("Attempting to force-launch AR camera...");
+        });
+
+        // Auto-launch attempt (some browsers allow it if it's the first user gesture)
+        window.addEventListener('click', () => {
+             // If they click anywhere else, try to launch too
+             if (!engine.arStatus === 'not-presenting') {
+                 engine.activateAR();
+             }
+        }, {once: true});
     </script>
 </body>
 </html>

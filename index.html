@@ -14,7 +14,7 @@
 
     <header>
         <h1>Gourmet AR</h1>
-        <p>Experience our signature dishes in augmented reality instantly. No markers needed.</p>
+        <p>Experience our signature dishes in life-size augmented reality. No markers needed.</p>
     </header>
 
     <main class="menu-container">
@@ -24,12 +24,12 @@
                 <h2>Mexican Tulum Burger</h2>
                 <p>A juicy beef patty topped with fresh avocado, jalapenos, and our secret Tulum spicy sauce. Served with crispy fries.</p>
                 <span class="price">$18.00</span>
-                <button onclick="launchAR('burger')" class="btn-ar">
+                <a href="ar.html?model=burger" class="btn-ar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                     </svg>
                     View in AR Vision
-                </button>
+                </a>
             </div>
             <div class="item-visual">
                 <iframe title="Mexican Tulum Burger" src="https://sketchfab.com/models/a66e5e28f12742b7a407a17d70c4037c/embed?autostart=1&ui_controls=0&ui_infos=0&ui_watermark=0"></iframe>
@@ -42,12 +42,12 @@
                 <h2>Pizza Salami</h2>
                 <p>Authentic wood-fired pizza with premium Italian salami, buffalo mozzarella, and fresh basil leaves on a sourdough crust.</p>
                 <span class="price">$22.00</span>
-                <button onclick="launchAR('pizza')" class="btn-ar">
+                <a href="ar.html?model=pizza" class="btn-ar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                     </svg>
                     View in AR Vision
-                </button>
+                </a>
             </div>
             <div class="item-visual">
                 <iframe title="Pizza Salami" src="https://sketchfab.com/models/639c6c062df64fa48822f82544926ebe/embed?autostart=1&ui_controls=0&ui_infos=0&ui_watermark=0"></iframe>
@@ -60,28 +60,6 @@
     </footer>
 
     <script>
-        // High-performance AR Launch Logic for Android/Redmi
-        function launchAR(model) {
-            const baseUrl = "https://tarit23.github.io/ar-menu";
-            const modelFile = model === 'pizza' ? 'pizza.glb' : 'burger.glb';
-            const fallbackUrl = `${baseUrl}/ar.html?model=${model}`;
-            
-            // Generate the Professional Google Scene Viewer Intent
-            // mode=ar_only forces it to skip the 3D preview and open the camera immediately.
-            const intentUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${baseUrl}/${modelFile}&mode=ar_only&resizable=false#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
-
-            // Detect if the user is on Android
-            const isAndroid = /Android/i.test(navigator.userAgent);
-
-            if (isAndroid) {
-                // Launch the native AR camera immediately
-                window.location.href = intentUrl;
-            } else {
-                // Fallback to the web preview for iOS/Other devices
-                window.location.href = fallbackUrl;
-            }
-        }
-
         // Simple intersection observer for animations
         const items = document.querySelectorAll('.menu-item');
         const observer = new IntersectionObserver((entries) => {
