@@ -60,22 +60,28 @@
     <!-- AR Scene -->
     <a-scene 
         embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        renderer="logarithmicDepthBuffer: true;"
+        arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true; precision: medium;"
         vr-mode-ui="enabled: false">
         
-        <a-assets id="assets-container">
-            <!-- Models will be added here dynamically -->
+        <a-assets>
+            <!-- Preload models to ensure they are ready -->
+            <a-asset-item id="burger-model" src="burger.glb"></a-asset-item>
+            <a-asset-item id="pizza-model" src="pizza.glb"></a-asset-item>
         </a-assets>
 
         <!-- Hiro Marker -->
-        <a-marker preset="hiro" id="marker">
+        <a-marker preset="hiro" id="marker" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+            <!-- Debug Box: Helps confirm the marker is detected even if the model fails to load -->
+            <a-box position="0 0.5 0" material="opacity: 0.5; color: #4ade80;" scale="0.2 0.2 0.2" 
+                   animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
+
             <a-entity 
                 id="model-entity"
-                position="0 0 0" 
-                scale="0.5 0.5 0.5"
+                position="0 0.1 0" 
+                scale="1 1 1"
                 rotation="0 0 0"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear"
             >
             </a-entity>
         </a-marker>
@@ -90,30 +96,32 @@
         const modelEntity = document.querySelector('#model-entity');
         const statusMsg = document.querySelector('#status');
 
-        // Set the model source
-        // Assumes burger.glb and pizza.glb are in the root directory
-        const modelPath = modelType === 'pizza' ? 'pizza.glb' : 'burger.glb';
-        
-        // Apply the GLTF model
-        modelEntity.setAttribute('gltf-model', modelPath);
-
-        // Scale adjustment based on model
+        // Set the model source based on parameter
         if (modelType === 'pizza') {
-            modelEntity.setAttribute('scale', '1 1 1');
+            modelEntity.setAttribute('gltf-model', '#pizza-model');
+            modelEntity.setAttribute('scale', '0.8 0.8 0.8'); // Pizza scale
         } else {
-            modelEntity.setAttribute('scale', '0.05 0.05 0.05'); // Burger models are often large
+            modelEntity.setAttribute('gltf-model', '#burger-model');
+            modelEntity.setAttribute('scale', '0.015 0.015 0.015'); // Recalibrated burger scale
         }
+
+        // Add error logging for models
+        modelEntity.addEventListener('model-error', (e) => {
+            console.error('Model failed to load:', e);
+            statusMsg.textContent = 'Error loading 3D model.';
+            statusMsg.style.background = '#ef4444';
+        });
 
         // Marker detection feedback
         const marker = document.querySelector('#marker');
         marker.addEventListener('markerFound', () => {
-            statusMsg.textContent = `Displaying ${modelType.toUpperCase()}!`;
+            statusMsg.textContent = `Dish Detected (${modelType.toUpperCase()})!`;
             statusMsg.style.background = '#4ade80';
         });
 
         marker.addEventListener('markerLost', () => {
-            statusMsg.textContent = 'Marker Lost. Point at Hiro Marker.';
-            statusMsg.style.background = '#facc15';
+            statusMsg.textContent = 'Searching for Hiro Marker...';
+            statusMsg.style.background = 'rgba(255, 166, 0, 0.9)';
         });
     </script>
 </body>
